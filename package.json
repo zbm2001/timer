@@ -1,6 +1,6 @@
 {
   "name": "@zbm1/timer",
-  "version": "1.0.1",
+  "version": "0.1.0",
   "description": "A Timer class of javascript",
   "main": "index.js",
   "scripts": {
