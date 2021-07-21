@@ -1,6 +1,6 @@
 /*
  * @name: @zbm1/timer
- * @version: 0.1.0
+ * @version: 0.1.1
  * @description: A Timer class of javascript
  * @author: zbm2001@aliyun.com
  * @license: ISC
@@ -48,39 +48,48 @@ EventEmitter.inherito(Timer, {
      * @param {Function} clearMethod 指定 clearTimeout 或 clearInterval
      */
     _clearTimer: function _clearTimer (sNamespace, clearMethod) {
-      var this$1 = this;
-
-      var ct = {
-        name: Timer.TIMEOUTS_KEY,
+      var arr = [];
+      var timeouts = this[Timer.TIMEOUTS_KEY];
+      timeouts && (timeouts = {
+        cache: timeouts,
         clearMethod: clearTimeout
-      };
-      var ci = {
-        name: Timer.INTERVALS_KEY,
+      });
+      var intervals = this[Timer.INTERVALS_KEY];
+      intervals  && (intervals = {
+        cache: intervals,
         clearMethod: clearInterval
-      };
-      var arr = clearMethod === clearTimeout
-        ? [ct]
-        : clearMethod === clearInterval
-          ? [ci]
-          : [ct, ci];
+      });
+
+      if (!timeouts && !intervals) { return }
+
+      if (clearMethod === clearTimeout) {
+        timeouts && arr.push(timeouts);
+      } else if (clearMethod === clearInterval) {
+        intervals && arr.push(intervals);
+      } else {
+        timeouts && arr.push(timeouts);
+        intervals && arr.push(intervals);
+      }
+
+      if (!arr.length) { return }
 
       var sNamespaces = sNamespace && sNamespace.trim();
       sNamespaces && (sNamespaces = sNamespaces.split(/\s+/));
 
       var forEach = sNamespaces
         ? function (ref) {
-          var name = ref.name;
+          var cache = ref.cache;
           var clearMethod = ref.clearMethod;
 
           return sNamespaces.forEach(function (sNamespace) {
-          recursionClear(clearMethod, namespace(this$1[name], sNamespace), sNamespace, this$1[name]);
+          recursionClear(clearMethod, namespace(cache, sNamespace), sNamespace, cache);
         });
       }
         : function (ref) {
-          var name = ref.name;
+          var cache = ref.cache;
           var clearMethod = ref.clearMethod;
 
-          return recursionClear(clearMethod, this$1[name]);
+          return recursionClear(clearMethod, cache);
       };
 
       arr.forEach(forEach);
