@@ -34,28 +34,39 @@ EventEmitter.inherito(Timer, {
      * @param {Function} clearMethod 指定 clearTimeout 或 clearInterval
      */
     _clearTimer (sNamespace, clearMethod) {
-      const ct = {
-        name: Timer.TIMEOUTS_KEY,
+      const arr = []
+      let timeouts = this[Timer.TIMEOUTS_KEY]
+      timeouts && (timeouts = {
+        cache: timeouts,
         clearMethod: clearTimeout
-      }
-      const ci = {
-        name: Timer.INTERVALS_KEY,
+      })
+      let intervals = this[Timer.INTERVALS_KEY]
+      intervals  && (intervals = {
+        cache: intervals,
         clearMethod: clearInterval
+      })
+
+      if (!timeouts && !intervals) return
+
+      if (clearMethod === clearTimeout) {
+        timeouts && arr.push(timeouts)
+      } else if (clearMethod === clearInterval) {
+        intervals && arr.push(intervals)
+      } else {
+        timeouts && arr.push(timeouts)
+        intervals && arr.push(intervals)
       }
-      let arr = clearMethod === clearTimeout
-        ? [ct]
-        : clearMethod === clearInterval
-          ? [ci]
-          : [ct, ci]
+
+      if (!arr.length) return
 
       let sNamespaces = sNamespace && sNamespace.trim()
       sNamespaces && (sNamespaces = sNamespaces.split(/\s+/))
 
       const forEach = sNamespaces
-        ? ({name, clearMethod}) => sNamespaces.forEach(sNamespace => {
-          recursionClear(clearMethod, namespace(this[name], sNamespace), sNamespace, this[name])
+        ? ({cache, clearMethod}) => sNamespaces.forEach(sNamespace => {
+          recursionClear(clearMethod, namespace(cache, sNamespace), sNamespace, cache)
         })
-        : ({name, clearMethod}) => recursionClear(clearMethod, this[name])
+        : ({cache, clearMethod}) => recursionClear(clearMethod, cache)
 
       arr.forEach(forEach)
     },
